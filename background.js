@@ -57,6 +57,26 @@ function insertMessagePopup(message, color) {
   }, 3000); // Remove message after 3 seconds
 }
 
+// Function to replace numbers with symbols from API
+async function replaceNumbersWithSymbols(symbols) {
+  const updatedSymbols = await Promise.all(
+    symbols.map(async (symbol) => {
+      if (!isNaN(symbol)) {
+        const response = await fetch(
+          `https://d3odwfz2snlzhh.cloudfront.net/default/screener-exchange-token-to-symbol?exchange_token=${symbol}`
+        );
+        const data = await response.json();
+        if (response.status === 404) {
+          return "";
+        }
+        return data.tradingsymbol || "";
+      }
+      return symbol;
+    })
+  );
+  return updatedSymbols.filter((symbol) => symbol); // Remove empty symbols
+}
+
 // Function to navigate to the next page and scrape data
 function navigateAndScrape(tabId) {
   if (!scrapingInProgress) return;
