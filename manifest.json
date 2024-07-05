@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Screener to TradingView",
+  "version": "1.0",
+  "permissions": ["activeTab", "scripting", "clipboardWrite"],
+  "icons": {
+    "48": "icons/logo.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
