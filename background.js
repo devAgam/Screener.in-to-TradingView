@@ -77,6 +77,14 @@ function navigateAndScrape(tabId) {
           chrome.tabs.update(tabId, { url: `${baseUrl}&page=${currentPage}` });
         }, 500); // 500ms delay
       } else {
+        chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          function: insertMessagePopup,
+          args: ["Replacing exchange tokens with symbols...", "orange"],
+        });
+
+        allSymbols = await replaceNumbersWithSymbols(allSymbols);
+
         const csvContent = allSymbols
           .map((symbol) => `NSE:${symbol}`)
           .join(", ");
