@@ -86,7 +86,7 @@ function navigateAndScrape(tabId) {
       target: { tabId: tabId },
       function: scrapeSymbols,
     },
-    (results) => {
+    async (results) => {
       if (results && results[0] && results[0].result) {
         console.log("Scraped symbols:", results[0].result); // Debugging
         allSymbols.push(...results[0].result);
