@@ -77,7 +77,9 @@ function navigateAndScrape(tabId) {
           chrome.tabs.update(tabId, { url: `${baseUrl}&page=${currentPage}` });
         }, 500); // 500ms delay
       } else {
-        const csvContent = allSymbols.join(", ");
+        const csvContent = allSymbols
+          .map((symbol) => `NSE:${symbol}`)
+          .join(", ");
         chrome.scripting.executeScript(
           {
             target: { tabId: tabId },
