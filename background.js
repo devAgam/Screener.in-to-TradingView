@@ -117,7 +117,8 @@ function navigateAndScrape(tabId) {
           () => {
             chrome.scripting.executeScript({
               target: { tabId: tabId },
-              function: insertCompletionMessage,
+              function: insertMessagePopup,
+              args: ["Symbols copied to clipboard as CSV.", "green"],
             });
           }
         );
