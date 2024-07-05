@@ -39,14 +39,14 @@ function copyToClipboard(text) {
   document.body.removeChild(textArea);
 }
 
-// Function to insert completion message
-function insertCompletionMessage() {
+// Function to insert a message popup
+function insertMessagePopup(message, color) {
   const messageDiv = document.createElement("div");
-  messageDiv.innerText = "Symbols copied to clipboard as CSV.";
+  messageDiv.innerText = message;
   messageDiv.style.position = "fixed";
   messageDiv.style.bottom = "10px";
   messageDiv.style.right = "10px";
-  messageDiv.style.backgroundColor = "#28a745";
+  messageDiv.style.backgroundColor = color;
   messageDiv.style.color = "white";
   messageDiv.style.padding = "10px";
   messageDiv.style.borderRadius = "5px";
