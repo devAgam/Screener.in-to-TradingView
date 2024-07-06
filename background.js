@@ -59,22 +59,29 @@ function insertMessagePopup(message, color) {
 
 // Function to replace numbers with symbols from API
 async function replaceNumbersWithSymbols(symbols) {
-  const updatedSymbols = await Promise.all(
-    symbols.map(async (symbol) => {
-      if (!isNaN(symbol)) {
-        const response = await fetch(
-          `https://d3odwfz2snlzhh.cloudfront.net/default/screener-exchange-token-to-symbol?exchange_token=${symbol}`
-        );
-        const data = await response.json();
-        if (response.status === 404) {
-          return "";
-        }
-        return data.tradingsymbol || "";
-      }
-      return symbol;
-    })
+  const numberSymbols = symbols.filter((symbol) => !isNaN(symbol));
+  const otherSymbols = symbols
+    .filter((symbol) => isNaN(symbol))
+    .map((symbol) => ({ symbol, exchange: "NSE" }));
+
+  if (numberSymbols.length === 0) return otherSymbols;
+
+  const response = await fetch(
+    `https://d3odwfz2snlzhh.cloudfront.net/default/screener-exchange-token-to-symbol?exchange_tokens=${numberSymbols.join(
+      ","
+    )}`
   );
-  return updatedSymbols.filter((symbol) => symbol); // Remove empty symbols
+  const data = await response.json();
+  if (response.status === 404) {
+    return otherSymbols;
+  }
+
+  const apiSymbols = data.map((item) => ({
+    symbol: item.tradingsymbol,
+    exchange: item.exchange,
+  }));
+
+  return [...otherSymbols, ...apiSymbols];
 }
 
 // Function to navigate to the next page and scrape data
@@ -94,8 +101,8 @@ function navigateAndScrape(tabId) {
       if (currentPage < totalPages) {
         currentPage++;
         setTimeout(() => {
-          chrome.tabs.update(tabId, { url: `${baseUrl}&page=${currentPage}` });
-        }, 500); // 500ms delay
+          chrome.tabs.update(tabId, { url: `${baseUrl}?page=${currentPage}` });
+        }, 800); // 800ms delay
       } else {
         chrome.scripting.executeScript({
           target: { tabId: tabId },
@@ -106,7 +113,7 @@ function navigateAndScrape(tabId) {
         allSymbols = await replaceNumbersWithSymbols(allSymbols);
 
         const csvContent = allSymbols
-          .map((symbol) => `NSE:${symbol}`)
+          .map((item) => `${item.exchange}:${item.symbol}`)
           .join(", ");
         chrome.scripting.executeScript(
           {
@@ -148,7 +155,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
-      baseUrl = url.href.split("&page=")[0]; // Get base URL without page parameter
+      // Get base URL without page parameter
+      // also remove the trailing slash
+      baseUrl = url.href.replace(/\/$/, "").split("?page=")[0];
 
       chrome.scripting.executeScript(
         {

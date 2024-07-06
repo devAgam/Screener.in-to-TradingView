@@ -2,10 +2,17 @@
   "manifest_version": 3,
   "name": "Screener to TradingView",
   "version": "1.0",
+  "description": "Copy screener results to TradingView",
   "permissions": ["activeTab", "scripting", "clipboardWrite"],
   "icons": {
     "48": "icons/logo.png"
   },
+  "content_scripts": [
+    {
+      "matches": ["*://*.screener.in/*"],
+      "css": ["popup.css"]
+    }
+  ],
   "background": {
     "service_worker": "background.js"
   },
