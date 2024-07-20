@@ -88,25 +88,25 @@ async function replaceNumbersWithSymbols(symbols) {
 function navigateAndScrape(tabId) {
   if (!scrapingInProgress) return;
 
-  chrome.scripting.executeScript(
-    {
+  browser.scripting
+    .executeScript({
       target: { tabId: tabId },
-      function: scrapeSymbols,
-    },
-    async (results) => {
-      if (results && results[0] && results[0].result) {
+      func: scrapeSymbols,
+    })
+    .then(async (results) => {
+      if (results && results[0]) {
         console.log("Scraped symbols:", results[0].result); // Debugging
         allSymbols.push(...results[0].result);
       }
       if (currentPage < totalPages) {
         currentPage++;
         setTimeout(() => {
-          chrome.tabs.update(tabId, { url: `${baseUrl}?page=${currentPage}` });
+          browser.tabs.update(tabId, { url: `${baseUrl}?page=${currentPage}` });
         }, 800); // 800ms delay
       } else {
-        chrome.scripting.executeScript({
+        browser.scripting.executeScript({
           target: { tabId: tabId },
-          function: insertMessagePopup,
+          func: insertMessagePopup,
           args: ["Replacing exchange tokens with symbols...", "orange"],
         });
 
@@ -115,34 +115,36 @@ function navigateAndScrape(tabId) {
         const csvContent = allSymbols
           .map((item) => `${item.exchange}:${item.symbol}`)
           .join(", ");
-        chrome.scripting.executeScript(
-          {
+        browser.scripting
+          .executeScript({
             target: { tabId: tabId },
-            function: copyToClipboard,
+            func: copyToClipboard,
             args: [csvContent],
-          },
-          () => {
-            chrome.scripting.executeScript({
+          })
+          .then(() => {
+            browser.scripting.executeScript({
               target: { tabId: tabId },
-              function: insertMessagePopup,
+              func: insertMessagePopup,
               args: ["Symbols copied to clipboard as CSV.", "green"],
             });
-          }
-        );
+          });
+
         allSymbols = [];
         currentPage = 1;
         scrapingInProgress = false;
       }
-    }
-  );
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
 // Listen for messages from the popup script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startScraping") {
     if (scrapingInProgress) return;
     scrapingInProgress = true;
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    browser.tabs.query({ active: true, currentWindow: true }).then((tabs) => {
       const activeTab = tabs[0];
       const url = new URL(activeTab.url);
 
@@ -159,25 +161,27 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       // also remove the trailing slash
       baseUrl = url.href.replace(/\/$/, "").split("?page=")[0];
 
-      chrome.scripting.executeScript(
-        {
+      browser.scripting
+        .executeScript({
           target: { tabId: activeTab.id },
-          function: getTotalPages,
-        },
-        (results) => {
-          if (results && results[0] && results[0].result) {
+          func: getTotalPages,
+        })
+        .then((results) => {
+          if (results && results[0]) {
             totalPages = results[0].result;
             console.log("Total pages:", totalPages); // Debugging
             navigateAndScrape(activeTab.id);
           }
-        }
-      );
+        })
+        .catch((error) => {
+          console.error(error);
+        });
     });
   }
 });
 
 // Detect tab updates and continue scraping if necessary
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (
     scrapingInProgress &&
     changeInfo.status === "complete"

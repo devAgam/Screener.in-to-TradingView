@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("startScraping").addEventListener("click", () => {
-    chrome.runtime.sendMessage({ action: "startScraping" });
+    browser.runtime.sendMessage({ action: "startScraping" });
   });
 });
