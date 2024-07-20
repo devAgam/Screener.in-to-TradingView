@@ -147,13 +147,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       const url = new URL(activeTab.url);
 
       // Check if the URL contains /screens/
-      if (!url.pathname.includes("/screens/")) {
-        alert(
-          "This script can only be run on pages containing /screens/ in the URL."
-        );
-        scrapingInProgress = false;
-        return;
-      }
+      // if (!url.pathname.includes("/screens/")) {
+      //   alert(
+      //     "This script can only be run on pages containing /screens/ in the URL."
+      //   );
+      //   scrapingInProgress = false;
+      //   return;
+      // }
 
       // Get base URL without page parameter
       // also remove the trailing slash
@@ -180,8 +180,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (
     scrapingInProgress &&
-    changeInfo.status === "complete" &&
-    tab.url.includes("/screens/")
+    changeInfo.status === "complete"
+    //  && tab.url.includes("/screens/")
   ) {
     navigateAndScrape(tabId);
   }
